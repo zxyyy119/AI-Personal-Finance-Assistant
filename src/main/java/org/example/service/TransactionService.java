@@ -3,6 +3,7 @@ package org.example.service;
 import org.example.model.Transaction;
 import org.example.model.TransactionCategory;
 import org.example.model.TransactionType;
+import org.example.storage.CsvTransactionRepository;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -12,18 +13,31 @@ import java.util.List;
 /** Stores transactions in memory and performs V0.1 finance calculations. */
 public class TransactionService {
     private final List<Transaction> transactions = new ArrayList<>();
+    private final CsvTransactionRepository repository;
     private long nextId = 1;
+
+    public TransactionService() {
+        this(new CsvTransactionRepository());
+    }
+
+    public TransactionService(CsvTransactionRepository repository) {
+        this.repository = repository;
+        transactions.addAll(repository.loadTransactions());
+        updateNextId();
+    }
 
     public void addTransaction(LocalDate date, TransactionType type, TransactionCategory category,
                                BigDecimal amount, String description) {
         transactions.add(new Transaction(nextId, date, type, category, amount, description));
         nextId++;
+        repository.saveTransactions(transactions);
     }
 
     public boolean removeTransaction(long id) {
         Transaction transaction = findTransactionById(id);
         if (transaction == null) return false;
         transactions.remove(transaction);
+        repository.saveTransactions(transactions);
         return true;
     }
 
@@ -70,5 +84,13 @@ public class TransactionService {
             if (transaction.getType() == type) total = total.add(transaction.getAmount());
         }
         return total;
+    }
+
+    private void updateNextId() {
+        for (Transaction transaction : transactions) {
+            if (transaction.getId() >= nextId) {
+                nextId = transaction.getId() + 1;
+            }
+        }
     }
 }

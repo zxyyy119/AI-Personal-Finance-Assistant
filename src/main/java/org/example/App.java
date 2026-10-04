@@ -15,7 +15,7 @@ public class App {
     private static final TransactionService transactionService = new TransactionService();
 
     public static void main(String[] args) {
-        System.out.println("Welcome to AI Personal Finance Assistant - V0.1");
+        System.out.println("Welcome to AI Personal Finance Assistant - V0.2");
         boolean running = true;
         while (running) {
             printMenu();
