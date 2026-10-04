@@ -2,13 +2,11 @@
 
 A Java-based personal finance management application developed step by step.
 
-This project is built as a learning project to practice Java programming, object-oriented design, Git/GitHub, and financial application development.
+This project is built as a learning project to practice Java programming, object-oriented design, Git/GitHub, data persistence, and financial application development.
 
 ## 📌 Current Version
 
-**V0.1 — Console Finance Assistant**
-
-The first version provides a command-line interface for basic personal finance management.
+**V0.2 — Persistent Console Finance Assistant**
 
 ## ✨ Features
 
@@ -21,6 +19,20 @@ The first version provides a command-line interface for basic personal finance m
 - Calculate current balance
 - View expenses by category
 - Validate user input
+- Save transactions to CSV
+- Automatically load transactions on startup
+- Persist transaction deletions
+- Preserve transaction IDs across restarts
+- Handle CSV fields containing commas
+- Skip invalid CSV records safely
+
+## 💾 Data Persistence
+
+Transaction data is stored locally in:
+
+`data/transactions.csv`
+
+The application automatically loads saved transactions when it starts and saves changes whenever transactions are added or deleted.
 
 ## 🧱 Project Structure
 
@@ -32,42 +44,36 @@ src/main/java/org/example/
 │   ├── Transaction.java
 │   ├── TransactionCategory.java
 │   └── TransactionType.java
-└── service/
-    └── TransactionService.java
-```
+├── service/
+│   └── TransactionService.java
+└── storage/
+    └── CsvTransactionRepository.java
 
-## 🛠️ Technologies
-
+🛠️ Technologies
 - Java
-- Maven
+- Maven project structure
 - IntelliJ IDEA
+- CSV
 - Git
 - GitHub
-
-## 🚀 Roadmap
-
-### V0.1
+🚀 Version History
+V0.1
 Basic console-based personal finance assistant. ✅
-
-### V0.2
-Improve the finance management functionality and project structure.
-
-### Future Versions
-- Persistent data storage
+V0.2
+Added CSV-based persistent transaction storage. ✅
+🗺️ Roadmap
+Future Versions
 - Database integration
+- Spring Boot backend
+- REST API
 - Data visualization
 - Budget management
 - Financial analysis
 - AI-powered personal finance features
-
-## 🎯 Project Goal
-
+- Web or mobile interface
+🎯 Project Goal
 The long-term goal of this project is to evolve from a simple Java console application into an intelligent personal finance assistant that combines:
-
-**Computer Science + Finance + AI**
-
-## 📖 Development Status
-
+Computer Science + Finance + AI
+📖 Development Status
 This project is currently under active development.
-
-Current version: **V0.1**
+Current version: V0.2
