@@ -1,96 +1,69 @@
 package org.example.service;
 
+import org.example.dto.CreateTransactionRequest;
+import org.example.dto.TransactionSummary;
+import org.example.exception.TransactionNotFoundException;
 import org.example.model.Transaction;
 import org.example.model.TransactionCategory;
 import org.example.model.TransactionType;
-import org.example.storage.CsvTransactionRepository;
+import org.example.repository.TransactionRepository;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.util.ArrayList;
+import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
 
-/** Stores transactions in memory and performs V0.1 finance calculations. */
+/** Applies finance rules while delegating persistence to TransactionRepository. */
+@Service
+@Transactional(readOnly = true)
 public class TransactionService {
-    private final List<Transaction> transactions = new ArrayList<>();
-    private final CsvTransactionRepository repository;
-    private long nextId = 1;
+    private final TransactionRepository transactionRepository;
 
-    public TransactionService() {
-        this(new CsvTransactionRepository());
+    public TransactionService(TransactionRepository transactionRepository) {
+        this.transactionRepository = transactionRepository;
     }
 
-    public TransactionService(CsvTransactionRepository repository) {
-        this.repository = repository;
-        transactions.addAll(repository.loadTransactions());
-        updateNextId();
+    @Transactional
+    public Transaction createTransaction(CreateTransactionRequest request) {
+        Transaction transaction = new Transaction(request.transactionDate(), request.type(), request.category(),
+                request.amount(), request.description() == null ? "" : request.description().trim());
+        return transactionRepository.save(transaction);
     }
 
-    public void addTransaction(LocalDate date, TransactionType type, TransactionCategory category,
-                               BigDecimal amount, String description) {
-        transactions.add(new Transaction(nextId, date, type, category, amount, description));
-        nextId++;
-        repository.saveTransactions(transactions);
+    public List<Transaction> getAllTransactions() {
+        return transactionRepository.findAll();
     }
 
-    public boolean removeTransaction(long id) {
-        Transaction transaction = findTransactionById(id);
-        if (transaction == null) return false;
-        transactions.remove(transaction);
-        repository.saveTransactions(transactions);
-        return true;
+    public Transaction getTransactionById(long id) {
+        return transactionRepository.findById(id).orElseThrow(() -> new TransactionNotFoundException(id));
     }
 
-    public Transaction findTransactionById(long id) {
-        for (Transaction transaction : transactions) {
-            if (transaction.getId() == id) return transaction;
-        }
-        return null;
+    @Transactional
+    public void deleteTransaction(long id) {
+        transactionRepository.delete(getTransactionById(id));
     }
 
-    public void showTransactions() {
-        if (transactions.isEmpty()) {
-            System.out.println("No transactions have been recorded yet.");
-            return;
-        }
-        System.out.println("\n========== All Transactions ==========");
-        for (Transaction transaction : transactions) System.out.println(transaction);
+    public TransactionSummary getSummary() {
+        BigDecimal totalIncome = sum(transactionRepository.findByType(TransactionType.INCOME));
+        BigDecimal totalExpense = sum(transactionRepository.findByType(TransactionType.EXPENSE));
+        return new TransactionSummary(totalIncome, totalExpense, totalIncome.subtract(totalExpense));
     }
 
-    public BigDecimal calculateTotalIncome() { return calculateTotalByType(TransactionType.INCOME); }
-    public BigDecimal calculateTotalExpense() { return calculateTotalByType(TransactionType.EXPENSE); }
-    public BigDecimal calculateBalance() { return calculateTotalIncome().subtract(calculateTotalExpense()); }
-
-    public BigDecimal calculateExpenseByCategory(TransactionCategory category) {
-        BigDecimal total = BigDecimal.ZERO;
-        for (Transaction transaction : transactions) {
-            boolean isMatchingExpense = transaction.getType() == TransactionType.EXPENSE
-                    && transaction.getCategory() == category;
-            if (isMatchingExpense) total = total.add(transaction.getAmount());
-        }
-        return total;
-    }
-
-    public void showExpenseByCategory() {
-        System.out.println("\n========== Expenses by Category ==========");
+    public Map<TransactionCategory, BigDecimal> getExpenseByCategory() {
+        Map<TransactionCategory, BigDecimal> totals = new EnumMap<>(TransactionCategory.class);
         for (TransactionCategory category : TransactionCategory.values()) {
-            System.out.println(category + ": " + calculateExpenseByCategory(category));
+            totals.put(category, sum(transactionRepository.findByTypeAndCategory(TransactionType.EXPENSE, category)));
         }
+        return totals;
     }
 
-    private BigDecimal calculateTotalByType(TransactionType type) {
+    private BigDecimal sum(List<Transaction> transactions) {
         BigDecimal total = BigDecimal.ZERO;
         for (Transaction transaction : transactions) {
-            if (transaction.getType() == type) total = total.add(transaction.getAmount());
+            total = total.add(transaction.getAmount());
         }
         return total;
-    }
-
-    private void updateNextId() {
-        for (Transaction transaction : transactions) {
-            if (transaction.getId() >= nextId) {
-                nextId = transaction.getId() + 1;
-            }
-        }
     }
 }

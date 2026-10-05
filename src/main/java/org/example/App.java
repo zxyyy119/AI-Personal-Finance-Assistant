@@ -2,20 +2,20 @@ package org.example;
 
 import org.example.model.TransactionCategory;
 import org.example.model.TransactionType;
-import org.example.service.TransactionService;
+import org.example.legacy.LegacyTransactionService;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.Scanner;
 
-/** Console entry point for V0.1. */
+/** Legacy V0.2 console entry point; V0.3 starts from Application. */
 public class App {
     private static final Scanner SCANNER = new Scanner(System.in);
-    private static final TransactionService transactionService = new TransactionService();
+    private static final LegacyTransactionService transactionService = new LegacyTransactionService();
 
     public static void main(String[] args) {
-        System.out.println("Welcome to AI Personal Finance Assistant - V0.2");
+        System.out.println("Welcome to AI Personal Finance Assistant - V0.2 (legacy console)");
         boolean running = true;
         while (running) {
             printMenu();
