@@ -7,6 +7,8 @@ import org.example.model.Transaction;
 import org.example.model.TransactionCategory;
 import org.example.model.TransactionType;
 import org.example.repository.TransactionRepository;
+import org.example.repository.projection.CategoryExpenseProjection;
+import org.example.repository.projection.TransactionSummaryProjection;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -46,24 +48,27 @@ public class TransactionService {
     }
 
     public TransactionSummary getSummary() {
-        BigDecimal totalIncome = sum(transactionRepository.findByType(TransactionType.INCOME));
-        BigDecimal totalExpense = sum(transactionRepository.findByType(TransactionType.EXPENSE));
-        return new TransactionSummary(totalIncome, totalExpense, totalIncome.subtract(totalExpense));
+        TransactionSummaryProjection totals = transactionRepository.calculateSummary(
+                TransactionType.INCOME, TransactionType.EXPENSE);
+        BigDecimal totalIncome = zeroIfNull(totals.getTotalIncome());
+        BigDecimal totalExpense = zeroIfNull(totals.getTotalExpense());
+        BigDecimal balance = zeroIfNull(totals.getBalance());
+        return new TransactionSummary(totalIncome, totalExpense, balance);
     }
 
     public Map<TransactionCategory, BigDecimal> getExpenseByCategory() {
         Map<TransactionCategory, BigDecimal> totals = new EnumMap<>(TransactionCategory.class);
         for (TransactionCategory category : TransactionCategory.values()) {
-            totals.put(category, sum(transactionRepository.findByTypeAndCategory(TransactionType.EXPENSE, category)));
+            totals.put(category, BigDecimal.ZERO);
+        }
+        List<CategoryExpenseProjection> groupedTotals = transactionRepository.sumByCategory(TransactionType.EXPENSE);
+        for (CategoryExpenseProjection categoryTotal : groupedTotals) {
+            totals.put(categoryTotal.getCategory(), zeroIfNull(categoryTotal.getTotal()));
         }
         return totals;
     }
 
-    private BigDecimal sum(List<Transaction> transactions) {
-        BigDecimal total = BigDecimal.ZERO;
-        for (Transaction transaction : transactions) {
-            total = total.add(transaction.getAmount());
-        }
-        return total;
+    private BigDecimal zeroIfNull(BigDecimal value) {
+        return value == null ? BigDecimal.ZERO : value;
     }
 }

@@ -3,6 +3,7 @@ package org.example.controller;
 import jakarta.validation.Valid;
 import org.example.dto.CreateTransactionRequest;
 import org.example.dto.TransactionSummary;
+import org.example.dto.TransactionResponse;
 import org.example.model.Transaction;
 import org.example.model.TransactionCategory;
 import org.example.service.TransactionService;
@@ -31,19 +32,23 @@ public class TransactionController {
     }
 
     @GetMapping
-    public List<Transaction> getAllTransactions() {
-        return transactionService.getAllTransactions();
+    public List<TransactionResponse> getAllTransactions() {
+        return transactionService.getAllTransactions().stream()
+                .map(TransactionResponse::from)
+                .toList();
     }
 
     @GetMapping("/{id}")
-    public Transaction getTransaction(@PathVariable long id) {
-        return transactionService.getTransactionById(id);
+    public TransactionResponse getTransaction(@PathVariable long id) {
+        return TransactionResponse.from(transactionService.getTransactionById(id));
     }
 
     @PostMapping
-    public ResponseEntity<Transaction> createTransaction(@Valid @RequestBody CreateTransactionRequest request) {
+    public ResponseEntity<TransactionResponse> createTransaction(
+            @Valid @RequestBody CreateTransactionRequest request) {
         Transaction saved = transactionService.createTransaction(request);
-        return ResponseEntity.created(URI.create("/api/transactions/" + saved.getId())).body(saved);
+        return ResponseEntity.created(URI.create("/api/transactions/" + saved.getId()))
+                .body(TransactionResponse.from(saved));
     }
 
     @DeleteMapping("/{id}")

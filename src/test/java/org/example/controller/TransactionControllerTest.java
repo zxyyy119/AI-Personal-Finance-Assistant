@@ -2,6 +2,7 @@ package org.example.controller;
 
 import org.example.dto.CreateTransactionRequest;
 import org.example.dto.TransactionSummary;
+import org.example.dto.TransactionResponse;
 import org.example.exception.GlobalExceptionHandler;
 import org.example.exception.TransactionNotFoundException;
 import org.example.model.Transaction;
