@@ -3,6 +3,9 @@ package org.example.storage;
 import org.example.model.Transaction;
 import org.example.model.TransactionCategory;
 import org.example.model.TransactionType;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Repository;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -16,17 +19,20 @@ import java.util.ArrayList;
 import java.util.List;
 
 /** Reads and writes transactions in a small, human-readable CSV file. */
+@Repository
 public class CsvTransactionRepository {
     private static final String DEFAULT_FILE_PATH = "data/transactions.csv";
     private static final String HEADER = "id,date,type,category,amount,description";
 
     private final File file;
 
+    /** Keeps the earlier console entry point working with its default CSV path. */
     public CsvTransactionRepository() {
         this(DEFAULT_FILE_PATH);
     }
 
-    public CsvTransactionRepository(String filePath) {
+    @Autowired
+    public CsvTransactionRepository(@Value("${app.csv.path:data/transactions.csv}") String filePath) {
         this.file = new File(filePath);
     }
 

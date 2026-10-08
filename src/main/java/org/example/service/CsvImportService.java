@@ -3,14 +3,12 @@ package org.example.service;
 import org.example.model.Transaction;
 import org.example.repository.TransactionRepository;
 import org.example.storage.CsvTransactionRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 /** Imports legacy CSV transactions once, when the new database is empty. */
 @Component
@@ -18,12 +16,7 @@ public class CsvImportService implements ApplicationRunner {
     private final TransactionRepository transactionRepository;
     private final CsvTransactionRepository csvRepository;
 
-    @Autowired
-    public CsvImportService(TransactionRepository transactionRepository) {
-        this(transactionRepository, new CsvTransactionRepository());
-    }
-
-    CsvImportService(TransactionRepository transactionRepository, CsvTransactionRepository csvRepository) {
+    public CsvImportService(TransactionRepository transactionRepository, CsvTransactionRepository csvRepository) {
         this.transactionRepository = transactionRepository;
         this.csvRepository = csvRepository;
     }
@@ -51,7 +44,7 @@ public class CsvImportService implements ApplicationRunner {
         List<Transaction> newTransactions = oldTransactions.stream()
                 .map(transaction -> new Transaction(transaction.getDate(), transaction.getType(),
                         transaction.getCategory(), transaction.getAmount(), transaction.getDescription()))
-                .collect(Collectors.toList());
+                .toList();
         transactionRepository.saveAll(newTransactions);
         System.out.println("Imported " + oldTransactions.size() + " transaction(s) from the V0.2 CSV file.");
         return oldTransactions.size();
